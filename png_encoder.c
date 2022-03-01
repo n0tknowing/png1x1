@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <zlib.h>
 
@@ -23,6 +24,7 @@ static void png_write_signature(FILE *f)
 	if (fwrite(buf, 1u, 8u, f) != 8u) {
 		fprintf(stderr, "failed to write: ");
 		fprintf(stderr, "%s\n", feof(f) ? "EOF reached" : "I/O error");
+		exit(1);
 	}
 }
 
@@ -40,6 +42,7 @@ static void png_write_ihdr(FILE *f)
 	if (fwrite(buf, 1u, 25u, f) != 25u) {
 		fprintf(stderr, "failed to write: ");
 		fprintf(stderr, "%s\n", feof(f) ? "EOF reached" : "I/O error");
+		exit(1);
 	}
 }
 
@@ -64,17 +67,17 @@ static void png_write_idat(FILE *f, const uint8_t *col)
 	const uint32_t length = endian_swap32(z.total_out);
 	if (fwrite(&length, sizeof(uint32_t), 1, f) != 1) {
 		fprintf(stderr, "idat write length failed\n");
-		return;
+		exit(1);
 	}
 
 	if (fwrite(type, 1, 4, f) != 4) {
 		fprintf(stderr, "idat write type failed\n");
-		return;
+		exit(1);
 	}
 
 	if (fwrite(out_buf, 1, z.total_out, f) != z.total_out) {
 		fprintf(stderr, "idat write compressed data failed\n");
-		return;
+		exit(1);
 	}
 
 	uint32_t crc = crc32(0, (Bytef *)type, 4);
@@ -83,7 +86,7 @@ static void png_write_idat(FILE *f, const uint8_t *col)
 
 	if (fwrite(&crc, sizeof(uint32_t), 1, f) != 1) {
 		fprintf(stderr, "idat write crc failed\n");
-		return;
+		exit(1);
 	}
 }
 
@@ -98,6 +101,7 @@ static void png_write_iend(FILE *f)
 	if (fwrite(buf, 1u, 12u, f) != 12u) {
 		fprintf(stderr, "failed to write: ");
 		fprintf(stderr, "%s\n", feof(f) ? "EOF reached" : "I/O error");
+		exit(1);
 	}
 }
 
@@ -135,7 +139,7 @@ int main(int argc, char **argv)
 
 	uint8_t rgb[3] = {0};
 	if (sscanf(rgb_input, "%2hhx%2hhx%2hhx", &rgb[0], &rgb[1], &rgb[2]) != 3)
-		perror("sscanf failed");
+		fprintf(stderr, "scanf failed\n");
 	else
 		png_write_all(f, rgb);
 
