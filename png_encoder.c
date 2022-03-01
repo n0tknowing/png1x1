@@ -124,18 +124,23 @@ int main(int argc, char **argv)
 
 	errno = 0;
 
+	const char *rgb_input = argv[1];
+	if (rgb_input[0] == '#')
+		rgb_input += 1;
+	else if (!strncmp(rgb_input, "0x", 2))
+		rgb_input += 2;
+
+	if (strlen(rgb_input) != 6) {
+		fprintf(stderr, "only RRGGBB is valid rgb input\n");
+		return 1;
+	}
+
 	const char *fname = argv[2];
 	FILE *f = fopen(fname, "wb+");
 	if (!f) {
 		perror("cannot open file");
 		return 1;
 	}
-
-	const char *rgb_input = argv[1];
-	if (rgb_input[0] == '#')
-		rgb_input += 1;
-	else if (!strncmp(rgb_input, "0x", 2))
-		rgb_input += 2;
 
 	uint8_t rgb[3] = {0};
 	if (sscanf(rgb_input, "%2hhx%2hhx%2hhx", &rgb[0], &rgb[1], &rgb[2]) != 3)
